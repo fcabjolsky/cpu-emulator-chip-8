@@ -1,10 +1,12 @@
-use std::todo;
+use std::{todo, panic};
 
 pub struct CPU {
     pub registers: [u8; 16],
     pub memory_position: usize,
     //todo: first 512bytes of memory are used for system
     pub memory: [u8; 0x1000],
+    stack_pointer: usize,
+    stack: [u16; 16]
 }
 
 impl CPU {
@@ -18,9 +20,13 @@ impl CPU {
             let y = ((opcode & 0x00F0) >> 4) as u8;
             let d = ((opcode & 0x000F) >> 0) as u8;
 
+            let nnn = (opcode & 0x0FFF) as u16;
+
             match (c, x, y, d) {
                 (0, 0, 0, 0) => {return;}
                 (0x8, _, _, 0x4) => self.add_xy(x, y),
+                (0x2, _, _, _ ) => self.call(nnn),
+                (0, 0, 0xE, 0xE) => self.ret(),
                 _ => todo!("todo"),
             }
         }
@@ -40,6 +46,24 @@ impl CPU {
         self.registers[x as usize] = val;
         self.registers[0xF] = overflow as u8;
     }
+
+    fn call(&mut self, mem_pos: u16) {
+        if self.stack_pointer == self.stack.len() {
+            panic!("Stack overflow");
+        }
+        self.stack[self.stack_pointer] = self.memory_position as u16;
+        self.stack_pointer += 1;
+        self.memory_position = mem_pos as usize;
+    }
+
+    fn ret(&mut self) {
+        if self.stack_pointer == 0 {
+            panic!("Stack underflow");
+        }
+        self.stack_pointer -= 1;
+        let previous_mem_position = self.stack[self.stack_pointer] as usize;
+        self.memory_position = previous_mem_position;
+    }
 }
 
 #[cfg(test)]
@@ -53,6 +77,8 @@ mod tests {
             registers: [0; 16], 
             memory_position: 0,
             memory: [0; 0x1000],
+            stack: [0; 16],
+            stack_pointer: 0,
         };
 
         cpu.registers[0] = 5;
@@ -68,5 +94,81 @@ mod tests {
         cpu.run();
 
         assert_eq!(cpu.registers[0], 35);
+    }
+
+    #[test]
+    fn complex_operation_using_functions() {
+        let mut cpu = CPU {
+            registers: [0; 16], 
+            memory_position: 0,
+            memory: [0; 0x1000],
+            stack: [0; 16],
+            stack_pointer: 0,
+        };
+
+        cpu.registers[0] = 5;
+        cpu.registers[1] = 10;
+        
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x21; mem[0x001] = 0x00; //call
+        mem[0x002] = 0x21; mem[0x003] = 0x00; //call
+        mem[0x004] = 0x00; mem[0x005] = 0x00;
+
+        //function: add r1 to r0 twice
+        mem[0x100] = 0x80; mem[0x101] = 0x14; 
+        mem[0x102] = 0x80; mem[0x103] = 0x14; 
+        mem[0x104] = 0x00; mem[0x105] = 0xEE;
+
+        cpu.run();
+
+        assert_eq!(cpu.registers[0], 45);
+    }
+
+    #[test]
+    #[should_panic(expected = "Stack overflow")]
+    fn stack_overflow() {
+        let mut cpu = CPU {
+            registers: [0; 16], 
+            memory_position: 0,
+            memory: [0; 0x1000],
+            stack: [0; 16],
+            stack_pointer: 0,
+        };
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x20; mem[0x001] = 0x02; //call
+        mem[0x002] = 0x20; mem[0x003] = 0x04; //call
+        mem[0x004] = 0x20; mem[0x005] = 0x06; //call
+        mem[0x006] = 0x20; mem[0x007] = 0x08; //call
+        mem[0x008] = 0x20; mem[0x009] = 0x0a; //call
+        mem[0x00a] = 0x20; mem[0x00b] = 0x0c; //call
+        mem[0x00c] = 0x20; mem[0x00d] = 0x0e; //call
+        mem[0x00e] = 0x20; mem[0x00f] = 0x10; //call
+        mem[0x010] = 0x20; mem[0x011] = 0x12; //call
+        mem[0x012] = 0x20; mem[0x013] = 0x14; //call
+        mem[0x014] = 0x20; mem[0x015] = 0x16; //call
+        mem[0x016] = 0x20; mem[0x017] = 0x18; //call
+        mem[0x018] = 0x20; mem[0x019] = 0x1a; //call
+        mem[0x01a] = 0x20; mem[0x01b] = 0x1c; //call
+        mem[0x01c] = 0x20; mem[0x01d] = 0x1e; //call
+        mem[0x01e] = 0x20; mem[0x01f] = 0x20; //call
+        mem[0x020] = 0x20; mem[0x021] = 0x22; //call
+        
+        cpu.run();
+    }
+
+    #[test]
+    #[should_panic(expected = "Stack underflow")]
+    fn stack_underflow() {
+        let mut cpu = CPU {
+            registers: [0; 16], 
+            memory_position: 0,
+            memory: [0; 0x1000],
+            stack: [0; 16],
+            stack_pointer: 0,
+        };
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x00; mem[0x001] = 0xEE; 
+        
+        cpu.run();
     }
 }
