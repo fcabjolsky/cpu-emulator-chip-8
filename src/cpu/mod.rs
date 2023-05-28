@@ -18,11 +18,11 @@ impl CPU {
             let c = ((opcode & 0xF000) >> 12) as u8;
             let x = ((opcode & 0x0F00) >> 8) as u8;
             let y = ((opcode & 0x00F0) >> 4) as u8;
-            let d = ((opcode & 0x000F) >> 0) as u8;
+            let op_minor = ((opcode & 0x000F) >> 0) as u8;
 
             let addr = (opcode & 0x0FFF) as u16;
             let kk = (opcode & 0x00FF) as u8;
-            
+
             match opcode {
                 0x0000 => {
                     return;
@@ -52,6 +52,18 @@ impl CPU {
                 0x7000..=0x7FFF => {
                     self.add(x, kk);
                 }
+                0x8000..=0x8FFF => match op_minor {
+                    0 => self.ld(x, self.registers[y as usize]),
+                    1 => self.or_xy(x, y),
+                    2 => self.and_xy(x, y),
+                    3 => self.xor_xy(x, y),
+                    4 => {
+                        self.add_xy(x, y);
+                    }
+                    _ => {
+                        todo!("opcode: {:04x}", opcode);
+                    }
+                },
                 _ => todo!("opcode {:04x}", opcode),
             }
         }
@@ -90,35 +102,52 @@ impl CPU {
         self.memory_position = previous_mem_position;
     }
 
-    fn jmp(&self, addr: u16) {
+    fn jmp(&mut self, addr: u16) {
         self.memory_position = addr as usize;
     }
 
-    fn se(&self, register: u8, nn: u8) {
+    fn se(&mut self, register: u8, nn: u8) {
         if self.registers[register as usize] == nn {
             self.memory_position += 2;
         }
     }
 
-    fn sne(&self, register: u8, nn: u8) {
+    fn sne(&mut self, register: u8, nn: u8) {
         if self.registers[register as usize] != nn {
             self.memory_position += 2;
         }
-
     }
 
-    fn ser(&self, r1: u8, r2: u8) {
+    fn ser(&mut self, r1: u8, r2: u8) {
         if self.registers[r1 as usize] == self.registers[r2 as usize] {
             self.memory_position += 2;
         }
     }
 
-    fn ld(&self, register: u8, nn: u8) {
+    fn ld(&mut self, register: u8, nn: u8) {
         self.registers[register as usize] = nn;
     }
 
-    fn add(&self, register: u8, nn: u8) {
+    fn add(&mut self, register: u8, nn: u8) {
         self.registers[register as usize] += nn;
+    }
+
+    fn or_xy(&mut self, r1: u8, r2: u8) {
+        let r1_value = self.registers[r1 as usize];
+        let r2_value = self.registers[r2 as usize];
+        self.registers[r1 as usize] = r1_value | r2_value;
+    }
+
+    fn and_xy(&mut self, r1: u8, r2: u8) {
+        let r1_value = self.registers[r1 as usize];
+        let r2_value = self.registers[r2 as usize];
+        self.registers[r1 as usize] = r1_value & r2_value;
+    }
+
+    fn xor_xy(&mut self, r1: u8, r2: u8) {
+        let r1_value = self.registers[r1 as usize];
+        let r2_value = self.registers[r2 as usize];
+        self.registers[r1 as usize] = r1_value ^ r2_value;
     }
 }
 
