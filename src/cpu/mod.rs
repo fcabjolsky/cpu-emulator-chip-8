@@ -49,6 +49,9 @@ impl CPU {
                 0x6000..=0x6FFF => {
                     self.ld(x, kk);
                 }
+                0x7000..=0x7FFF => {
+                    self.add(x, kk);
+                }
                 _ => todo!("opcode {:04x}", opcode),
             }
         }
@@ -112,6 +115,10 @@ impl CPU {
 
     fn ld(&self, register: u8, nn: u8) {
         self.registers[register as usize] = nn;
+    }
+
+    fn add(&self, register: u8, nn: u8) {
+        self.registers[register as usize] += nn;
     }
 }
 
