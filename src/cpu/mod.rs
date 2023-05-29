@@ -336,4 +336,22 @@ mod tests {
         // 0x004 + 2 because of the last run
         assert_eq!(cpu.memory_position, 0x006);
     }
+
+    #[test]
+    fn load_to_register() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+        cpu.registers[1] = 5;
+
+        assert_eq!(cpu.registers[0], 5);
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x60;
+        mem[0x001] = 0x0A;
+
+        cpu.run();
+        // 0x004 + 2 because of the last run
+        assert_eq!(cpu.registers[0], 10);
+        assert_eq!(cpu.registers[1], 5);
+    }
 }
