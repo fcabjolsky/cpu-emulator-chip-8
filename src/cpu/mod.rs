@@ -276,4 +276,17 @@ mod tests {
 
         cpu.run();
     }
+
+    #[test]
+    fn after_jump_memory_position_is_correct() {
+        let mut cpu = CPU::new();
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x12;
+        mem[0x001] = 0x22;
+
+        cpu.run();
+        // 0x222 + 2 because of the last run
+        assert_eq!(cpu.memory_position, 0x224);
+    }
 }
