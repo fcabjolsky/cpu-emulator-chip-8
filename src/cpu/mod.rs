@@ -289,4 +289,51 @@ mod tests {
         // 0x222 + 2 because of the last run
         assert_eq!(cpu.memory_position, 0x224);
     }
+
+    #[test]
+    fn skip_comparing_register_with_number() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x30;
+        mem[0x001] = 0x05;
+
+        cpu.run();
+        // 0x004 + 2 because of the last run
+        assert_eq!(cpu.memory_position, 0x006);
+    }
+
+    #[test]
+    fn skip_comparing_two_registers() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+        cpu.registers[1] = 5;
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x50;
+        mem[0x001] = 0x10;
+
+        cpu.run();
+        // 0x004 + 2 because of the last run
+        assert_eq!(cpu.memory_position, 0x006);
+    }
+
+    #[test]
+    fn skip_comparing_two_registers_not_equal() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+        cpu.registers[1] = 10;
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x40;
+        mem[0x001] = 0x10;
+
+        cpu.run();
+        // 0x004 + 2 because of the last run
+        assert_eq!(cpu.memory_position, 0x006);
+    }
 }
