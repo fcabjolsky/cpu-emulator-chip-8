@@ -354,4 +354,19 @@ mod tests {
         assert_eq!(cpu.registers[0], 10);
         assert_eq!(cpu.registers[1], 5);
     }
+
+    #[test]
+    fn add_without_carry_flag() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x70;
+        mem[0x001] = 0x0A;
+
+        cpu.run();
+        // 0x004 + 2 because of the last run
+        assert_eq!(cpu.registers[0], 15);
+    }
 }
