@@ -350,9 +350,24 @@ mod tests {
         mem[0x001] = 0x0A;
 
         cpu.run();
-        // 0x004 + 2 because of the last run
         assert_eq!(cpu.registers[0], 10);
         assert_eq!(cpu.registers[1], 5);
+    }
+
+    #[test]
+    fn load_register1_to_register0() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+        cpu.registers[1] = 15;
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x80;
+        mem[0x001] = 0x10;
+
+        cpu.run();
+        assert_eq!(cpu.registers[0], 15);
+        assert_eq!(cpu.registers[1], 15);
     }
 
     #[test]
@@ -366,7 +381,6 @@ mod tests {
         mem[0x001] = 0x0A;
 
         cpu.run();
-        // 0x004 + 2 because of the last run
         assert_eq!(cpu.registers[0], 15);
     }
 }
