@@ -383,4 +383,49 @@ mod tests {
         cpu.run();
         assert_eq!(cpu.registers[0], 15);
     }
+
+    #[test]
+    fn or() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+        cpu.registers[1] = 15;
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x80;
+        mem[0x001] = 0x11;
+
+        cpu.run();
+        assert_eq!(cpu.registers[0], 5 | 15);
+    }
+
+    #[test]
+    fn and() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+        cpu.registers[1] = 15;
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x80;
+        mem[0x001] = 0x12;
+
+        cpu.run();
+        assert_eq!(cpu.registers[0], 5 & 15);
+    }
+
+    #[test]
+    fn xor() {
+        let mut cpu = CPU::new();
+
+        cpu.registers[0] = 5;
+        cpu.registers[1] = 15;
+
+        let mem = &mut cpu.memory;
+        mem[0x000] = 0x80;
+        mem[0x001] = 0x13;
+
+        cpu.run();
+        assert_eq!(cpu.registers[0], 5 ^ 15);
+    }
 }
