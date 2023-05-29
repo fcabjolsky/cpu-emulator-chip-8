@@ -10,6 +10,16 @@ pub struct CPU {
 }
 
 impl CPU {
+    pub fn new() -> Self {
+        return CPU {
+            registers: [0; 16],
+            memory_position: 0,
+            memory: [0; 0x1000],
+            stack: [0; 16],
+            stack_pointer: 0,
+        };
+    }
+
     pub fn run(&mut self) {
         loop {
             let opcode = self.read_op_code();
@@ -158,14 +168,7 @@ mod tests {
     use super::*;
     #[test]
     fn add_three_registers_to_first_register() {
-        let mut cpu = CPU {
-            registers: [0; 16],
-            memory_position: 0,
-            memory: [0; 0x1000],
-            stack: [0; 16],
-            stack_pointer: 0,
-        };
-
+        let mut cpu = CPU::new();
         cpu.registers[0] = 5;
         cpu.registers[1] = 10;
         cpu.registers[2] = 10;
@@ -221,13 +224,8 @@ mod tests {
     #[test]
     #[should_panic(expected = "Stack overflow")]
     fn stack_overflow() {
-        let mut cpu = CPU {
-            registers: [0; 16],
-            memory_position: 0,
-            memory: [0; 0x1000],
-            stack: [0; 16],
-            stack_pointer: 0,
-        };
+        let mut cpu = CPU::new();
+
         let mem = &mut cpu.memory;
         mem[0x000] = 0x20;
         mem[0x001] = 0x02; //call
@@ -270,13 +268,8 @@ mod tests {
     #[test]
     #[should_panic(expected = "Stack underflow")]
     fn stack_underflow() {
-        let mut cpu = CPU {
-            registers: [0; 16],
-            memory_position: 0,
-            memory: [0; 0x1000],
-            stack: [0; 16],
-            stack_pointer: 0,
-        };
+        let mut cpu = CPU::new();
+
         let mem = &mut cpu.memory;
         mem[0x000] = 0x00;
         mem[0x001] = 0xEE;
